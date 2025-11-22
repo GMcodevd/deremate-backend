@@ -16,7 +16,8 @@ const app = express();
 // --- Variables de entorno ---
 const PORT = process.env.PORT || 3001;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/derematepage";
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const FRONTEND_URL = process.env.FRONTEND_URL || "";
+
 
 // --- Middlewares globales ---
 app.use(helmet());            // Seguridad por cabeceras
@@ -25,15 +26,9 @@ app.use(express.json());      // Parseo de JSON
 
 // --- CORS ---
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || origin === FRONTEND_URL) {
-      callback(null, true);
-    } else {
-      callback(new Error("No permitido por CORS"), false);
-    }
-  },
-  credentials: true
+  origin: "*"
 }));
+
 
 // --- Servir carpeta de imágenes con CORS habilitado ---
 app.use(
