@@ -12,7 +12,7 @@ export async function getAllProductsController(req, res) {
   try {
     const { name } = req.query;
     const products = await getAllProducts(name);
-    res.status(200).json(products);
+    res.status(200).json(products?.products || products);
   } catch (error) {
     res.status(500).json({
       mensaje: 'Ocurrió un error obteniendo los productos.',
