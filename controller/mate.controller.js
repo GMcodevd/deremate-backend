@@ -35,12 +35,12 @@ export async function createProductController(req, res) {
       });
     }
 
-    // Generar URL completa si se subió un archivo
+    // --- Construir URL de imagen ---
     if (req.file) {
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      productData.image = `${baseUrl}/uploads/${req.file.filename}`;
+      const BASE_URL = process.env.BASE_URL || "https://deremate-backend.onrender.com";
+      productData.image = `${BASE_URL}/uploads/${req.file.filename}`;
     } else if (req.body.imageUrl) {
-      productData.image = req.body.imageUrl;
+      productData.image = req.body.imageUrl; // si viene desde URL, usar tal cual
     }
 
     // Si no se proporcionó imagen de ninguna forma
@@ -73,10 +73,10 @@ export async function updateProductController(req, res) {
     const { id } = req.params;
     const productData = req.body;
 
-    // Generar URL completa si se subió un archivo nuevo
+    // --- Construir URL de imagen ---
     if (req.file) {
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      productData.image = `${baseUrl}/uploads/${req.file.filename}`;
+      const BASE_URL = process.env.BASE_URL || "https://deremate-backend.onrender.com";
+      productData.image = `${BASE_URL}/uploads/${req.file.filename}`;
     } else if (req.body.imageUrl) {
       productData.image = req.body.imageUrl;
     }
@@ -94,6 +94,7 @@ export async function updateProductController(req, res) {
     });
   }
 }
+
 
 /**
  * Eliminar un producto

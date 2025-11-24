@@ -14,7 +14,7 @@ import authRouter from "./routes/auth.routes.js";
 const app = express();
 
 // --- Variables de entorno ---
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/derematepage";
 const FRONTEND_URL = process.env.FRONTEND_URL || "";
 
@@ -49,10 +49,10 @@ app.use("/api/auth", authRouter);
 // --- Conexión MongoDB ---
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB conectado"))
-  .catch((err) => console.error("❌ Error al conectar MongoDB:", err));
+  .then(() => console.log("MongoDB conectado"))
+  .catch((err) => console.error(" Error al conectar MongoDB:", err));
 
 // --- Levantar servidor ---
-app.listen(PORT, () => {
-  console.log(` Servidor corriendo en http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Servidor corriendo en el puerto: ${PORT}`);
 });
