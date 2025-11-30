@@ -1,151 +1,94 @@
-import Product from "../model/mates.model.js";
-import { uploadToCloudinary } from "../config/cloudinary.js";
+import Producto from "../models/Producto.js";
+import { v2 as cloudinary } from "cloudinary";
 
-// ===============================
-//   CREAR PRODUCTO
-// ===============================
+// Configuración directa de Cloudinary (usa `.env`)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Obtener productos
+export const getProducts = async (req, res) => {
+  try {
+    const productos = await Producto.find();
+    res.json(productos);
+  } catch (error) {
+    res.status(500).json({ message: "Error obteniendo productos" });
+  }
+};
+
+// Crear producto
 export const createProduct = async (req, res) => {
   try {
-    const { name, category, description, price, stock } = req.body;
+    let imageUrl = "";
 
-    let image = "";
-
-    // Si viene archivo -> subir a cloudinary
+    // Si el usuario subió un archivo
     if (req.file) {
-      const uploadResult = await uploadToCloudinary(req.file.path);
-      image = uploadResult.secure_url;
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "deremate-products"
+      });
+      imageUrl = uploadResult.secure_url;
     }
 
-    // Si viene imageUrl desde el front (no debería en create, pero por seguridad)
-    if (!req.file && req.body.imageUrl) {
-      image = req.body.imageUrl;
-    }
-
-    const nuevoProducto = new Product({
-      name,
-      category,
-      description,
-      price,
-      stock,
-      image
+    const nuevoProducto = new Producto({
+      title: req.body.title,
+      price: req.body.price,
+      description: req.body.description,
+      image: imageUrl,
     });
 
-    const productoGuardado = await nuevoProducto.save();
+    const saved = await nuevoProducto.save();
 
-    res.status(201).json({
-      ok: true,
-      message: "Producto creado con éxito",
-      producto: productoGuardado
-    });
-
+    res.json(saved);
   } catch (error) {
-    console.error("Error en createProduct:", error);
-    res.status(500).json({
-      ok: false,
-      message: "Error al crear producto",
-      error: error.message
-    });
+    res.status(500).json({ message: "Error creando producto", error });
   }
 };
 
-// ===============================
-//   ACTUALIZAR PRODUCTO
-// ===============================
+// Actualizar producto
 export const updateProduct = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id;
 
-    let { name, category, description, price, stock, imageUrl } = req.body;
-
-    const productoExistente = await Product.findById(id);
-    if (!productoExistente) {
-      return res.status(404).json({
-        ok: false,
-        message: "Producto no encontrado"
-      });
-    }
-
-    // Manejo de imagen (archivo nuevo o mantener existente)
-    let image = productoExistente.image;
+    let newImageUrl = req.body.image; // si viene una URL ya existente
 
     if (req.file) {
-      // Hay archivo nuevo → subir a Cloudinary
-      const uploadResult = await uploadToCloudinary(req.file.path);
-      image = uploadResult.secure_url;
-    } else if (imageUrl) {
-      // No se sube archivo → mantener la existente
-      image = imageUrl;
+      // Subir nueva imagen
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "deremate-products"
+      });
+
+      newImageUrl = uploadResult.secure_url;
     }
 
-    productoExistente.name = name;
-    productoExistente.category = category;
-    productoExistente.description = description;
-    productoExistente.price = price;
-    productoExistente.stock = stock;
-    productoExistente.image = image;
+    const updated = await Producto.findByIdAndUpdate(
+      id,
+      {
+        title: req.body.title,
+        price: req.body.price,
+        description: req.body.description,
+        image: newImageUrl
+      },
+      { new: true }
+    );
 
-    const productoActualizado = await productoExistente.save();
-
-    res.status(200).json({
-      ok: true,
-      message: "Producto actualizado",
-      producto: productoActualizado
-    });
+    res.json(updated);
 
   } catch (error) {
-    console.error("Error en updateProduct:", error);
-    res.status(500).json({
-      ok: false,
-      message: "Error al actualizar producto",
-      error: error.message
-    });
+    res.status(500).json({ message: "Error actualizando producto", error });
   }
 };
 
-// ===============================
-//   OBTENER TODOS LOS PRODUCTOS
-// ===============================
-export const getAllProducts = async (req, res) => {
-  try {
-    const productos = await Product.find();
-    res.status(200).json(productos);
-  } catch (error) {
-    console.error("Error al obtener productos:", error);
-    res.status(500).json({
-      ok: false,
-      message: "Error al obtener productos"
-    });
-  }
-};
-
-// ===============================
-//   ELIMINAR PRODUCTO
-// ===============================
+// Eliminar producto
 export const deleteProduct = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id;
 
-    const producto = await Product.findById(id);
-    if (!producto) {
-      return res.status(404).json({
-        ok: false,
-        message: "Producto no encontrado"
-      });
-    }
+    const deleted = await Producto.findByIdAndDelete(id);
 
-    await producto.deleteOne();
-
-    res.status(200).json({
-      ok: true,
-      message: "Producto eliminado correctamente"
-    });
-
+    res.json({ message: "Producto eliminado", deleted });
   } catch (error) {
-    console.error("Error al eliminar producto:", error);
-    res.status(500).json({
-      ok: false,
-      message: "Error al eliminar producto",
-      error: error.message
-    });
+    res.status(500).json({ message: "Error eliminando producto", error });
   }
 };
