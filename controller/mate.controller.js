@@ -1,113 +1,151 @@
-import {
-  createProduct,
-  getAllProducts,
-  updateProduct,
-  deleteProduct,
-} from '../service/mate.service.js';
+import Product from "../model/mates.model.js";
+import { uploadToCloudinary } from "../config/cloudinary.js";
 
-/**
- * Obtener todos los productos
- */
-export async function getAllProductsController(req, res) {
+// ===============================
+//   CREAR PRODUCTO
+// ===============================
+export const createProduct = async (req, res) => {
   try {
-    const { name } = req.query;
-    const products = await getAllProducts(name);
-    res.status(200).json(products?.products || products);
-  } catch (error) {
-    res.status(500).json({
-      mensaje: 'Ocurrió un error obteniendo los productos.',
-      error: error.message,
-    });
-  }
-}
+    const { name, category, description, price, stock } = req.body;
 
-/**
- * Crear un producto
- */
-export async function createProductController(req, res) {
-  try {
-    const productData = req.body;
+    let image = "";
 
-    // Validación básica
-    if (!productData.name || !productData.category) {
-      return res.status(400).json({
-        mensaje: 'El nombre y la categoría son campos obligatorios.',
-      });
-    }
-
-    // --- Construir URL de imagen ---
+    // Si viene archivo -> subir a cloudinary
     if (req.file) {
-      const BASE_URL = process.env.BASE_URL || "https://deremate-backend.onrender.com";
-      productData.image = `${BASE_URL}/uploads/${req.file.filename}`;
-    } else if (req.body.imageUrl) {
-      productData.image = req.body.imageUrl; // si viene desde URL, usar tal cual
+      const uploadResult = await uploadToCloudinary(req.file.path);
+      image = uploadResult.secure_url;
     }
 
-    // Si no se proporcionó imagen de ninguna forma
-    if (!productData.image) {
-      return res.status(400).json({
-        mensaje: 'Debe proporcionar una imagen (archivo o URL).',
-      });
+    // Si viene imageUrl desde el front (no debería en create, pero por seguridad)
+    if (!req.file && req.body.imageUrl) {
+      image = req.body.imageUrl;
     }
 
-    // Crear producto
-    const product = await createProduct(productData);
+    const nuevoProducto = new Product({
+      name,
+      category,
+      description,
+      price,
+      stock,
+      image
+    });
+
+    const productoGuardado = await nuevoProducto.save();
 
     res.status(201).json({
-      mensaje: 'Producto creado exitosamente.',
-      producto: product,
+      ok: true,
+      message: "Producto creado con éxito",
+      producto: productoGuardado
     });
+
   } catch (error) {
+    console.error("Error en createProduct:", error);
     res.status(500).json({
-      mensaje: 'Ocurrió un error creando el producto.',
-      error: error.message,
+      ok: false,
+      message: "Error al crear producto",
+      error: error.message
     });
   }
-}
+};
 
-/**
- * Actualizar un producto
- */
-export async function updateProductController(req, res) {
+// ===============================
+//   ACTUALIZAR PRODUCTO
+// ===============================
+export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const productData = req.body;
 
-    // --- Construir URL de imagen ---
-    if (req.file) {
-      const BASE_URL = process.env.BASE_URL || "https://deremate-backend.onrender.com";
-      productData.image = `${BASE_URL}/uploads/${req.file.filename}`;
-    } else if (req.body.imageUrl) {
-      productData.image = req.body.imageUrl;
+    let { name, category, description, price, stock, imageUrl } = req.body;
+
+    const productoExistente = await Product.findById(id);
+    if (!productoExistente) {
+      return res.status(404).json({
+        ok: false,
+        message: "Producto no encontrado"
+      });
     }
 
-    const product = await updateProduct(id, productData);
+    // Manejo de imagen (archivo nuevo o mantener existente)
+    let image = productoExistente.image;
+
+    if (req.file) {
+      // Hay archivo nuevo → subir a Cloudinary
+      const uploadResult = await uploadToCloudinary(req.file.path);
+      image = uploadResult.secure_url;
+    } else if (imageUrl) {
+      // No se sube archivo → mantener la existente
+      image = imageUrl;
+    }
+
+    productoExistente.name = name;
+    productoExistente.category = category;
+    productoExistente.description = description;
+    productoExistente.price = price;
+    productoExistente.stock = stock;
+    productoExistente.image = image;
+
+    const productoActualizado = await productoExistente.save();
 
     res.status(200).json({
-      mensaje: 'Producto actualizado correctamente.',
-      producto: product,
+      ok: true,
+      message: "Producto actualizado",
+      producto: productoActualizado
     });
+
   } catch (error) {
+    console.error("Error en updateProduct:", error);
     res.status(500).json({
-      mensaje: 'Ocurrió un error actualizando el producto.',
-      error: error.message,
+      ok: false,
+      message: "Error al actualizar producto",
+      error: error.message
     });
   }
-}
+};
 
+// ===============================
+//   OBTENER TODOS LOS PRODUCTOS
+// ===============================
+export const getAllProducts = async (req, res) => {
+  try {
+    const productos = await Product.find();
+    res.status(200).json(productos);
+  } catch (error) {
+    console.error("Error al obtener productos:", error);
+    res.status(500).json({
+      ok: false,
+      message: "Error al obtener productos"
+    });
+  }
+};
 
-/**
- * Eliminar un producto
- */
-export async function deleteProductController(req, res) {
+// ===============================
+//   ELIMINAR PRODUCTO
+// ===============================
+export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    await deleteProduct(id);
-    res.sendStatus(204);
+
+    const producto = await Product.findById(id);
+    if (!producto) {
+      return res.status(404).json({
+        ok: false,
+        message: "Producto no encontrado"
+      });
+    }
+
+    await producto.deleteOne();
+
+    res.status(200).json({
+      ok: true,
+      message: "Producto eliminado correctamente"
+    });
+
   } catch (error) {
+    console.error("Error al eliminar producto:", error);
     res.status(500).json({
-      mensaje: 'Ocurrió un error eliminando el producto.',
-      error: error.message,
+      ok: false,
+      message: "Error al eliminar producto",
+      error: error.message
     });
   }
-}
+};

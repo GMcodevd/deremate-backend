@@ -1,40 +1,19 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary.js";
 
-// Carpeta donde se guardarán las imágenes
-const uploadPath = path.join(process.cwd(), "uploads");
-
-// Si no existe la carpeta, se crea automáticamente
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath);
-}
-
-// Configuración del almacenamiento
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    // nombre único: timestamp + nombre original
-    cb(null, Date.now() + "-" + file.originalname);
+// Configuración del storage de Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "deremate_uploads", // Carpeta en tu Cloudinary (puede tener otro nombre)
+    allowed_formats: ["jpg", "png", "jpeg", "webp"],
+    transformation: [{ width: 800, crop: "limit" }], // opcional: limita tamaño
   },
 });
 
-// Filtro para aceptar solo imágenes válidas
-const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
-
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true); // Aceptar el archivo
-  } else {
-    cb(new Error("Solo se permiten imágenes (JPEG, PNG o WEBP)"), false);
-  }
-};
-
-// Configuración final del middleware
+// Middleware final de multer
 export const upload = multer({
   storage,
-  fileFilter,
-  limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
 });

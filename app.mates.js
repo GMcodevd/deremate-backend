@@ -1,8 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-console.log("Cloudinary conectado:", process.env.CLOUDINARY_CLOUD_NAME ? "OK" : "ERROR");
-
 import express from "express";
 import mongoose from "mongoose";
 import path from "path";
