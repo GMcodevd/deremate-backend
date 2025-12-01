@@ -14,6 +14,7 @@ export const getProducts = async (req, res) => {
     const productos = await Producto.find();
     res.json(productos);
   } catch (error) {
+    console.error("ERROR getProducts:", error);
     res.status(500).json({ message: "Error obteniendo productos" });
   }
 };
@@ -23,7 +24,6 @@ export const createProduct = async (req, res) => {
   try {
     let imageUrl = "";
 
-    // Si el usuario subió un archivo
     if (req.file) {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
         folder: "deremate-products"
@@ -39,10 +39,11 @@ export const createProduct = async (req, res) => {
     });
 
     const saved = await nuevoProducto.save();
-
     res.json(saved);
+
   } catch (error) {
-    res.status(500).json({ message: "Error creando producto", error });
+    console.error("ERROR createProduct:", error);
+    res.status(500).json({ message: "Error creando producto" });
   }
 };
 
@@ -51,10 +52,9 @@ export const updateProduct = async (req, res) => {
   try {
     const id = req.params.id;
 
-    let newImageUrl = req.body.image; // si viene una URL ya existente
+    let newImageUrl = req.body.image;
 
     if (req.file) {
-      // Subir nueva imagen
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
         folder: "deremate-products"
       });
@@ -76,7 +76,8 @@ export const updateProduct = async (req, res) => {
     res.json(updated);
 
   } catch (error) {
-    res.status(500).json({ message: "Error actualizando producto", error });
+    console.error("ERROR updateProduct:", error);
+    res.status(500).json({ message: "Error actualizando producto" });
   }
 };
 
@@ -89,6 +90,7 @@ export const deleteProduct = async (req, res) => {
 
     res.json({ message: "Producto eliminado", deleted });
   } catch (error) {
-    res.status(500).json({ message: "Error eliminando producto", error });
+    console.error("ERROR deleteProduct:", error);
+    res.status(500).json({ message: "Error eliminando producto" });
   }
 };
