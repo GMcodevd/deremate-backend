@@ -16,10 +16,8 @@ export const getProducts = async (req, res) => {
   } catch (error) {
     console.error("ERROR getProducts:", error);
     res.status(500).json({ message: "Error obteniendo productos" });
-    // Mantengo los logs de error detallados que tenías para facilitar el debug
-    console.error("ERROR getProducts:", error?.message);
-    console.error("FULL ERROR:", JSON.stringify(error, null, 2));
-
+    console.error("ERROR DETALLADO (STACK):", error.stack);
+    console.error("MENSAJE ESPECÍFICO:", error.message);
   }
 };
 
@@ -28,23 +26,21 @@ export const createProduct = async (req, res) => {
   try {
     let imageUrl = "";
 
-    // 1. Manejo de la imagen (Subida a Cloudinary)
+    // 1. Manejo de la imagen:
+    // 🚨 CORRECCIÓN: Si usas multer-storage-cloudinary, la imagen YA está subida.
+    // Solo tomamos la URL de Cloudinary que el middleware ya dejó en req.file.path.
     if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "deremate-products"
-      });
-      imageUrl = uploadResult.secure_url;
+      imageUrl = req.file.path; // <--- USAR LA URL YA SUBIDA
     }
 
-    // 2. CREACIÓN del nuevo Producto con los campos correctos del MODELO
+    // 2. CREACIÓN del nuevo Producto (Alineado con el modelo)
     const nuevoProducto = new Producto({
-      // **CORRECCIÓN: Se cambió 'title' por 'name' y se agregó 'category'**
-      name: req.body.name, // <-- AHORA USA EL CAMPO 'name'
-      category: req.body.category, // <-- AHORA INCLUYE EL CAMPO OBLIGATORIO 'category'
+      name: req.body.name, 
+      category: req.body.category, 
       price: req.body.price,
       description: req.body.description,
-      stock: req.body.stock || 0, // Añadido opcionalmente si lo envías
-      image: imageUrl,
+      stock: req.body.stock || 0,
+      image: imageUrl, // Usamos la URL que obtuvimos
     });
 
     const saved = await nuevoProducto.save();
@@ -54,11 +50,8 @@ export const createProduct = async (req, res) => {
     console.error("ERROR createProduct:", error);
     res.status(500).json({ message: "Error creando producto" });
     // Logs de error detallados
-    // 💡 Muestra el stack trace completo del error
-  console.error("ERROR DETALLADO (STACK):", error.stack); 
-  
-  // 💡 Intenta obtener el mensaje de error explícito
-  console.error("MENSAJE ESPECÍFICO:", error.message);
+    console.error("ERROR DETALLADO (STACK):", error.stack); 
+    console.error("MENSAJE ESPECÍFICO:", error.message);
   }
 };
 
@@ -66,28 +59,23 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const id = req.params.id;
-
     let newImageUrl = req.body.image;
 
-    // 1. Manejo de la nueva imagen si se sube
+    // 1. Manejo de la nueva imagen si se sube (¡SÓLO LEER LA URL!)
     if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "deremate-products"
-      });
-
-      newImageUrl = uploadResult.secure_url;
+      // 🚨 CORRECCIÓN: Tomar la URL que ya subió Multer/Cloudinary
+      newImageUrl = req.file.path;
     }
 
-    // 2. ACTUALIZACIÓN del producto con los campos correctos del MODELO
+    // 2. ACTUALIZACIÓN del producto (Alineado con el modelo)
     const updated = await Producto.findByIdAndUpdate(
       id,
       {
-        // **CORRECCIÓN: Se cambió 'title' por 'name' y se agregó 'category'**
-        name: req.body.name, // <-- AHORA USA EL CAMPO 'name'
-        category: req.body.category, // <-- AÑADIDO 'category' para que pueda actualizarse
+        name: req.body.name, 
+        category: req.body.category, 
         price: req.body.price,
         description: req.body.description,
-        stock: req.body.stock, // Añadido opcionalmente
+        stock: req.body.stock, 
         image: newImageUrl
       },
       { new: true }
@@ -99,9 +87,8 @@ export const updateProduct = async (req, res) => {
     console.error("ERROR updateProduct:", error);
     res.status(500).json({ message: "Error actualizando producto" });
     // Logs de error detallados
-    console.error("ERROR updateProduct:", error?.message);
-    console.error("FULL ERROR:", JSON.stringify(error, null, 2));
-
+    console.error("ERROR DETALLADO (STACK):", error.stack);
+    console.error("MENSAJE ESPECÍFICO:", error.message);
   }
 };
 
@@ -117,8 +104,7 @@ export const deleteProduct = async (req, res) => {
     console.error("ERROR deleteProduct:", error);
     res.status(500).json({ message: "Error eliminando producto" });
     // Logs de error detallados
-    console.error("ERROR deleteProduct:", error?.message);
-    console.error("FULL ERROR:", JSON.stringify(error, null, 2));
-
+    console.error("ERROR DETALLADO (STACK):", error.stack);
+    console.error("MENSAJE ESPECÍFICO:", error.message);
   }
 };
