@@ -1,4 +1,4 @@
-import Producto from "../models/Producto.js";
+import Producto from "../model/mates.model.js";
 import { v2 as cloudinary } from "cloudinary";
 
 // Configuración directa de Cloudinary (usa `.env`)

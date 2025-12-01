@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  getAllProducts,
+  getProducts,
   createProduct,
   updateProduct,
   deleteProduct
@@ -12,7 +12,7 @@ import { upload } from '../middleware/uploadMiddleware.js';
 const router = express.Router();
 
 // Rutas públicas
-router.get('/', getAllProducts);
+router.get('/', getProducts);
 
 // Rutas protegidas
 router.post('/', authMiddleware, upload.single('imageFile'), createProduct);
