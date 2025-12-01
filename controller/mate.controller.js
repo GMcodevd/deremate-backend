@@ -16,6 +16,9 @@ export const getProducts = async (req, res) => {
   } catch (error) {
     console.error("ERROR getProducts:", error);
     res.status(500).json({ message: "Error obteniendo productos" });
+    console.error("ERROR createProduct:", error?.message);
+console.error("FULL ERROR:", JSON.stringify(error, null, 2));
+
   }
 };
 
@@ -44,6 +47,9 @@ export const createProduct = async (req, res) => {
   } catch (error) {
     console.error("ERROR createProduct:", error);
     res.status(500).json({ message: "Error creando producto" });
+    console.error("ERROR createProduct:", error?.message);
+console.error("FULL ERROR:", JSON.stringify(error, null, 2));
+
   }
 };
 
@@ -78,6 +84,9 @@ export const updateProduct = async (req, res) => {
   } catch (error) {
     console.error("ERROR updateProduct:", error);
     res.status(500).json({ message: "Error actualizando producto" });
+    console.error("ERROR createProduct:", error?.message);
+console.error("FULL ERROR:", JSON.stringify(error, null, 2));
+
   }
 };
 
@@ -92,5 +101,8 @@ export const deleteProduct = async (req, res) => {
   } catch (error) {
     console.error("ERROR deleteProduct:", error);
     res.status(500).json({ message: "Error eliminando producto" });
+    console.error("ERROR createProduct:", error?.message);
+console.error("FULL ERROR:", JSON.stringify(error, null, 2));
+
   }
 };
