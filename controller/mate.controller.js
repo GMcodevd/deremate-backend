@@ -54,9 +54,11 @@ export const createProduct = async (req, res) => {
     console.error("ERROR createProduct:", error);
     res.status(500).json({ message: "Error creando producto" });
     // Logs de error detallados
-    console.error("ERROR createProduct:", error?.message);
-    console.error("FULL ERROR:", JSON.stringify(error, null, 2));
-
+    // 💡 Muestra el stack trace completo del error
+  console.error("ERROR DETALLADO (STACK):", error.stack); 
+  
+  // 💡 Intenta obtener el mensaje de error explícito
+  console.error("MENSAJE ESPECÍFICO:", error.message);
   }
 };
 
