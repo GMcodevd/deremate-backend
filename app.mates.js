@@ -30,17 +30,17 @@ app.use(cors({
 }));
 
 
-// --- Servir carpeta de imágenes con CORS habilitado ---
-app.use(
-  '/uploads',
-  express.static(path.join(process.cwd(), 'uploads'), {
-    setHeaders: (res) => {
-      // Permite acceso desde el frontend
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    }
-  })
-);
+// // --- Servir carpeta de imágenes con CORS habilitado ---
+// app.use(
+//   '/uploads',
+//   express.static(path.join(process.cwd(), 'uploads'), {
+//     setHeaders: (res) => {
+//       // Permite acceso desde el frontend
+//       res.setHeader("Access-Control-Allow-Origin", "*");
+//       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+//     }
+//   })
+// );
 
 // --- Rutas principales ---
 app.use("/api/product", productRouter);

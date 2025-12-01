@@ -1,12 +1,14 @@
 import Producto from "../model/mates.model.js";
-import { v2 as cloudinary } from "cloudinary";
+import { v2 as cloudinary } from "cloudinary"; // Se mantiene la importación por si la usas en el futuro, pero no se configura aquí.
 
-// Configuración directa de Cloudinary (usa `.env`)
+// --- ELIMINADA LA CONFIGURACIÓN REDUNDANTE DE CLOUDINARY ---
+/*
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
+*/
 
 // Obtener productos
 export const getProducts = async (req, res) => {
@@ -26,21 +28,19 @@ export const createProduct = async (req, res) => {
   try {
     let imageUrl = "";
 
-    // 1. Manejo de la imagen:
-    // 🚨 CORRECCIÓN: Si usas multer-storage-cloudinary, la imagen YA está subida.
-    // Solo tomamos la URL de Cloudinary que el middleware ya dejó en req.file.path.
+    // 1. Manejo de la imagen: TOMAMOS LA URL YA SUBIDA POR MULTER
     if (req.file) {
-      imageUrl = req.file.path; // <--- USAR LA URL YA SUBIDA
+      imageUrl = req.file.path; // ✅ CORRECTO: URL de Cloudinary proporcionada por multer-storage-cloudinary
     }
 
-    // 2. CREACIÓN del nuevo Producto (Alineado con el modelo)
+    // 2. CREACIÓN del nuevo Producto (Alineado con el modelo: name, category)
     const nuevoProducto = new Producto({
-      name: req.body.name, 
-      category: req.body.category, 
+      name: req.body.name,
+      category: req.body.category,
       price: req.body.price,
       description: req.body.description,
       stock: req.body.stock || 0,
-      image: imageUrl, // Usamos la URL que obtuvimos
+      image: imageUrl,
     });
 
     const saved = await nuevoProducto.save();
@@ -50,7 +50,7 @@ export const createProduct = async (req, res) => {
     console.error("ERROR createProduct:", error);
     res.status(500).json({ message: "Error creando producto" });
     // Logs de error detallados
-    console.error("ERROR DETALLADO (STACK):", error.stack); 
+    console.error("ERROR DETALLADO (STACK):", error.stack);
     console.error("MENSAJE ESPECÍFICO:", error.message);
   }
 };
@@ -61,21 +61,20 @@ export const updateProduct = async (req, res) => {
     const id = req.params.id;
     let newImageUrl = req.body.image;
 
-    // 1. Manejo de la nueva imagen si se sube (¡SÓLO LEER LA URL!)
+    // 1. Manejo de la nueva imagen si se sube (TOMAMOS LA URL YA SUBIDA POR MULTER)
     if (req.file) {
-      // 🚨 CORRECCIÓN: Tomar la URL que ya subió Multer/Cloudinary
-      newImageUrl = req.file.path;
+      newImageUrl = req.file.path; // ✅ CORRECTO: URL de Cloudinary proporcionada por multer-storage-cloudinary
     }
 
     // 2. ACTUALIZACIÓN del producto (Alineado con el modelo)
     const updated = await Producto.findByIdAndUpdate(
       id,
       {
-        name: req.body.name, 
-        category: req.body.category, 
+        name: req.body.name,
+        category: req.body.category,
         price: req.body.price,
         description: req.body.description,
-        stock: req.body.stock, 
+        stock: req.body.stock,
         image: newImageUrl
       },
       { new: true }
