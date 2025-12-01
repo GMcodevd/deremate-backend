@@ -16,8 +16,9 @@ export const getProducts = async (req, res) => {
   } catch (error) {
     console.error("ERROR getProducts:", error);
     res.status(500).json({ message: "Error obteniendo productos" });
-    console.error("ERROR createProduct:", error?.message);
-console.error("FULL ERROR:", JSON.stringify(error, null, 2));
+    // Mantengo los logs de error detallados que tenías para facilitar el debug
+    console.error("ERROR getProducts:", error?.message);
+    console.error("FULL ERROR:", JSON.stringify(error, null, 2));
 
   }
 };
@@ -27,6 +28,7 @@ export const createProduct = async (req, res) => {
   try {
     let imageUrl = "";
 
+    // 1. Manejo de la imagen (Subida a Cloudinary)
     if (req.file) {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
         folder: "deremate-products"
@@ -34,10 +36,14 @@ export const createProduct = async (req, res) => {
       imageUrl = uploadResult.secure_url;
     }
 
+    // 2. CREACIÓN del nuevo Producto con los campos correctos del MODELO
     const nuevoProducto = new Producto({
-      title: req.body.title,
+      // **CORRECCIÓN: Se cambió 'title' por 'name' y se agregó 'category'**
+      name: req.body.name, // <-- AHORA USA EL CAMPO 'name'
+      category: req.body.category, // <-- AHORA INCLUYE EL CAMPO OBLIGATORIO 'category'
       price: req.body.price,
       description: req.body.description,
+      stock: req.body.stock || 0, // Añadido opcionalmente si lo envías
       image: imageUrl,
     });
 
@@ -47,8 +53,9 @@ export const createProduct = async (req, res) => {
   } catch (error) {
     console.error("ERROR createProduct:", error);
     res.status(500).json({ message: "Error creando producto" });
+    // Logs de error detallados
     console.error("ERROR createProduct:", error?.message);
-console.error("FULL ERROR:", JSON.stringify(error, null, 2));
+    console.error("FULL ERROR:", JSON.stringify(error, null, 2));
 
   }
 };
@@ -60,6 +67,7 @@ export const updateProduct = async (req, res) => {
 
     let newImageUrl = req.body.image;
 
+    // 1. Manejo de la nueva imagen si se sube
     if (req.file) {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
         folder: "deremate-products"
@@ -68,12 +76,16 @@ export const updateProduct = async (req, res) => {
       newImageUrl = uploadResult.secure_url;
     }
 
+    // 2. ACTUALIZACIÓN del producto con los campos correctos del MODELO
     const updated = await Producto.findByIdAndUpdate(
       id,
       {
-        title: req.body.title,
+        // **CORRECCIÓN: Se cambió 'title' por 'name' y se agregó 'category'**
+        name: req.body.name, // <-- AHORA USA EL CAMPO 'name'
+        category: req.body.category, // <-- AÑADIDO 'category' para que pueda actualizarse
         price: req.body.price,
         description: req.body.description,
+        stock: req.body.stock, // Añadido opcionalmente
         image: newImageUrl
       },
       { new: true }
@@ -84,8 +96,9 @@ export const updateProduct = async (req, res) => {
   } catch (error) {
     console.error("ERROR updateProduct:", error);
     res.status(500).json({ message: "Error actualizando producto" });
-    console.error("ERROR createProduct:", error?.message);
-console.error("FULL ERROR:", JSON.stringify(error, null, 2));
+    // Logs de error detallados
+    console.error("ERROR updateProduct:", error?.message);
+    console.error("FULL ERROR:", JSON.stringify(error, null, 2));
 
   }
 };
@@ -101,8 +114,9 @@ export const deleteProduct = async (req, res) => {
   } catch (error) {
     console.error("ERROR deleteProduct:", error);
     res.status(500).json({ message: "Error eliminando producto" });
-    console.error("ERROR createProduct:", error?.message);
-console.error("FULL ERROR:", JSON.stringify(error, null, 2));
+    // Logs de error detallados
+    console.error("ERROR deleteProduct:", error?.message);
+    console.error("FULL ERROR:", JSON.stringify(error, null, 2));
 
   }
 };
